@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Reasoning Model From Scratch — Brian Won</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #333333;
+            --accent: #666666;
+            --border: #eeeeee;
+            --primary: #5a3d87;
+            --secondary: #7b5aa7;
+            --highlight: #6b4d96;
+            --light-gray: #f5f5f5;
+            --gradient-start: #fbf9fd;
+            --gradient-end: #efe8f7;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            min-height: 100vh;
+        }
+        .page-wrap {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem 24px 4rem;
+        }
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 48px;
+            font-size: 0.9rem;
+        }
+        .top-nav a { color: var(--primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-bottom .15s; }
+        .top-nav a:hover { border-bottom: 1px solid var(--primary); }
+        .top-nav .sep { color: var(--accent); opacity: .5; }
+        .post-hero { margin-bottom: 48px; }
+        .post-tag {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: var(--primary);
+            background: rgba(90,61,135,.1);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+        .post-hero h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.25;
+            margin-bottom: 14px;
+        }
+        .post-subtitle { color: var(--accent); font-size: 1rem; max-width: 680px; margin-bottom: 16px; }
+        .post-meta { font-size: 0.85rem; color: var(--accent); display: flex; gap: 14px; flex-wrap: wrap; }
+        .post-meta span { display: flex; align-items: center; gap: 5px; }
+        .toc {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 24px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.06);
+            margin-bottom: 44px;
+        }
+        .toc h4 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        .toc ol { padding-left: 18px; }
+        .toc li { margin-bottom: 5px; }
+        .toc a { color: var(--primary); font-size: 0.88rem; text-decoration: none; border-bottom: 1px solid transparent; transition: border-bottom .15s; }
+        .toc a:hover { border-bottom: 1px solid var(--primary); }
+        .post-body h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            border-left: 4px solid var(--secondary);
+            padding-left: 14px;
+            margin: 44px 0 16px;
+        }
+        .post-body h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin: 28px 0 10px;
+        }
+        .post-body p { margin-bottom: 16px; font-size: 0.97rem; }
+        .post-body ul, .post-body ol { padding-left: 22px; margin-bottom: 16px; }
+        .post-body li { margin-bottom: 7px; font-size: 0.95rem; }
+        .post-body code {
+            background: rgba(90,61,135,.08);
+            color: var(--primary);
+            font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 0.83em;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .post-body pre {
+            background: #251f31;
+            color: #ddd2eb;
+            border-radius: 8px;
+            padding: 18px 20px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            font-family: "SF Mono", "Fira Code", monospace;
+            line-height: 1.55;
+        }
+        .callout {
+            background: rgba(90,61,135,.07);
+            border-left: 4px solid var(--secondary);
+            border-radius: 0 8px 8px 0;
+            padding: 14px 18px;
+            margin: 20px 0;
+            font-size: 0.92rem;
+        }
+        .callout strong { color: var(--primary); }
+        .concept-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 20px 0;
+        }
+        .concept-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            border-top: 3px solid var(--secondary);
+        }
+        .concept-card h4 { color: var(--primary); font-size: 0.95rem; margin-bottom: 8px; }
+        .concept-card p, .concept-card li { font-size: 0.86rem; color: var(--accent); }
+        .concept-card ul { padding-left: 17px; margin-bottom: 0; }
+        .pipeline {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            margin: 22px 0;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .pipeline-step {
+            background: white;
+            border: 1px solid rgba(90,61,135,.15);
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 120px;
+            text-align: center;
+            box-shadow: 0 2px 7px rgba(0,0,0,.04);
+        }
+        .pipeline-step strong { display: block; color: var(--primary); font-size: .85rem; }
+        .pipeline-step span { color: var(--accent); font-size: .75rem; }
+        .arrow { display: flex; align-items: center; color: var(--secondary); font-weight: 700; }
+        .learning-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0 28px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 12px rgba(0,0,0,.06);
+            font-size: 0.88rem;
+        }
+        .learning-table thead tr { background: var(--primary); color: white; }
+        .learning-table th { padding: 11px 14px; text-align: left; font-weight: 600; }
+        .learning-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .learning-table tr:last-child td { border-bottom: none; }
+        .learning-table tr:nth-child(even) td { background: rgba(90,61,135,.03); }
+        .footer-note {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(90,61,135,.15);
+            color: var(--accent);
+            font-size: .85rem;
+        }
+        @media (max-width: 600px) {
+            .concept-grid { grid-template-columns: 1fr; }
+            .post-hero h1 { font-size: 1.6rem; }
+            .pipeline { flex-direction: column; }
+            .arrow { justify-content: center; transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <nav class="top-nav">
+        <a href="blog.html">← Blog</a>
+        <span class="sep">/</span>
+        <span>Reasoning Models</span>
+    </nav>
+
+    <div class="post-hero">
+        <span class="post-tag">Machine Learning</span>
+        <h1>Building a Reasoning Model From Scratch: What I Learned</h1>
+        <p class="post-subtitle">My notes from implementing the core pieces behind modern reasoning systems: generation, verifiers, inference-time scaling, self-refinement, GRPO, and distillation.</p>
+        <div class="post-meta">
+            <span>Brian Won</span>
+            <span>·</span>
+            <span>July 2026</span>
+            <span>·</span>
+            <span>15 min read</span>
+        </div>
+    </div>
+
+    <div class="toc">
+        <h4>Contents</h4>
+        <ol>
+            <li><a href="#goal">Why I studied reasoning models from first principles</a></li>
+            <li><a href="#generation">The atomic unit: next-token generation</a></li>
+            <li><a href="#evaluation">Evaluation and verifiers</a></li>
+            <li><a href="#scaling">Inference-time scaling</a></li>
+            <li><a href="#refinement">Self-refinement and confidence</a></li>
+            <li><a href="#grpo">Training with RLVR and GRPO</a></li>
+            <li><a href="#distillation">Distilling reasoning behavior</a></li>
+            <li><a href="#takeaways">What I can now build and explain</a></li>
+        </ol>
+    </div>
+
+    <article class="post-body">
+        <p>I wanted to understand reasoning models below the API level. Instead of only calling a hosted model and observing that it “thinks,” I worked through the mechanics that make the behavior possible. The goal was not to train a frontier model. It was to build a small, inspectable system where I could trace every transition from prompt to tokens, rewards, gradients, and updated behavior.</p>
+
+        <h2 id="goal">Why I Studied Reasoning Models From First Principles</h2>
+        <p>A reasoning model is still an autoregressive language model. It predicts one token at a time. The interesting part is the machinery around that model: prompting it to spend tokens on intermediate work, sampling multiple candidate solutions, checking answers with verifiers, scoring trajectories, and updating the policy toward better behavior.</p>
+
+        <div class="callout">
+            <strong>My central mental model:</strong> reasoning is not a separate magical module. It is a generation-and-feedback loop built around a language model.
+        </div>
+
+        <div class="pipeline">
+            <div class="pipeline-step"><strong>Prompt</strong><span>problem and instructions</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Generate</strong><span>one token at a time</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Verify</strong><span>measure correctness</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Improve</strong><span>search or training</span></div>
+        </div>
+
+        <p>This perspective helped me separate three ways to improve a reasoning system:</p>
+        <ul>
+            <li><strong>Inference-time scaling:</strong> spend more compute while answering, without changing model weights.</li>
+            <li><strong>Reinforcement learning:</strong> use rewards to update the model toward more successful reasoning trajectories.</li>
+            <li><strong>Distillation:</strong> train a smaller model on high-quality reasoning generated by a stronger teacher.</li>
+        </ul>
+
+        <h2 id="generation">The Atomic Unit: Next-Token Generation</h2>
+        <p>The first part of my learning was rebuilding the generation path around a pretrained Qwen3 model. A prompt is tokenized into IDs, mapped to embedding vectors, passed through the transformer, and projected into one logit for every token in the vocabulary. Only the logits from the final sequence position are needed to choose the next token.</p>
+
+        <pre>prompt
+  → token IDs: [B, T]
+  → embeddings: [B, T, C]
+  → transformer blocks
+  → logits: [B, T, vocab_size]
+  → take logits[:, -1, :]
+  → sample next token
+  → append token and repeat</pre>
+
+        <p>The shape transitions gave me a concrete understanding of what the model is doing. With a hidden dimension of 1,024 and a vocabulary of 151,936 tokens, the output head converts the final 1,024-dimensional hidden state into 151,936 candidate scores. Those scores become probabilities after normalization.</p>
+
+        <h3>Why the KV cache matters</h3>
+        <p>Without caching, generating every new token recomputes attention over all earlier tokens. The key-value cache stores the attention keys and values from previous positions so each decoding step only computes the new position. This changes generation from repeatedly rebuilding the full prefix to incrementally extending it.</p>
+
+        <div class="concept-grid">
+            <div class="concept-card">
+                <h4>Without KV cache</h4>
+                <p>For token <em>t</em>, the model reprocesses tokens 1 through <em>t</em>. Simple, but increasingly expensive as the sequence grows.</p>
+            </div>
+            <div class="concept-card">
+                <h4>With KV cache</h4>
+                <p>Past attention states are reused. The model processes only the new token while attending to cached history.</p>
+            </div>
+        </div>
+
+        <pre>with torch.inference_mode():
+    for token_id in generate_with_cache(
+        model=model,
+        token_ids=input_ids,
+        max_new_tokens=512,
+        temperature=0.7,
+        top_p=0.9,
+    ):
+        generated.append(token_id.item())</pre>
+
+        <p>I also learned why generation wrappers are useful. The low-level generator should focus on model execution and token selection. A wrapper can handle prompt rendering, streaming decoded text, end-of-sequence behavior, and user-facing return values. That separation made the code easier to test and extend.</p>
+
+        <h2 id="evaluation">Evaluation and Verifiers</h2>
+        <p>A model producing a long explanation is not evidence that it solved the problem. To improve reasoning, I first needed a reliable way to measure correctness. For math tasks, this meant extracting the final answer, normalizing formatting, and checking mathematical equivalence against a reference solution.</p>
+
+        <table class="learning-table">
+            <thead>
+                <tr>
+                    <th>Stage</th>
+                    <th>Purpose</th>
+                    <th>Failure it prevents</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Answer extraction</td>
+                    <td>Locate the model's final answer inside a longer response.</td>
+                    <td>Grading the entire chain of thought as if it were the answer.</td>
+                </tr>
+                <tr>
+                    <td>Normalization</td>
+                    <td>Remove superficial formatting differences.</td>
+                    <td>Treating <code>1/2</code> and <code>0.5</code> as unrelated strings.</td>
+                </tr>
+                <tr>
+                    <td>Equivalence check</td>
+                    <td>Determine whether two mathematical expressions mean the same thing.</td>
+                    <td>Rewarding only exact text matches.</td>
+                </tr>
+                <tr>
+                    <td>Dataset evaluation</td>
+                    <td>Aggregate accuracy across many examples.</td>
+                    <td>Drawing conclusions from a few hand-picked prompts.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Key lesson:</strong> the verifier defines the learning signal. A weak verifier can reward formatting tricks, miss correct solutions, or encourage reward hacking.
+        </div>
+
+        <h2 id="scaling">Inference-Time Scaling</h2>
+        <p>Inference-time scaling improves results without updating model weights. Instead of accepting the first greedy answer, the system spends more computation exploring candidate solutions and selecting a better one.</p>
+
+        <h3>Temperature and top-p sampling</h3>
+        <p>Temperature rescales logits before sampling. Lower values concentrate probability on high-scoring tokens; higher values flatten the distribution and increase diversity. Top-p sampling limits selection to the smallest set of tokens whose cumulative probability reaches a threshold.</p>
+
+        <pre>scaled_logits = next_token_logits / temperature
+probs = torch.softmax(scaled_logits, dim=-1)
+
+sorted_probs, sorted_idx = torch.sort(probs, descending=True)
+cumulative = torch.cumsum(sorted_probs, dim=-1)
+keep = cumulative <= top_p
+keep[..., 0] = True</pre>
+
+        <p>The important insight was that diversity is useful when the system can evaluate candidates. Randomness by itself does not improve reasoning; it creates a search space. A verifier or voting mechanism must then identify which samples are promising.</p>
+
+        <h3>Self-consistency</h3>
+        <p>Self-consistency runs several independent reasoning trajectories, extracts their final answers, and selects the answer that appears most often. Different samples may take different paths, but correct reasoning often converges on the same result.</p>
+
+        <div class="concept-grid">
+            <div class="concept-card">
+                <h4>Single-path decoding</h4>
+                <ul>
+                    <li>Low cost</li>
+                    <li>Low latency</li>
+                    <li>One early mistake can determine the final answer</li>
+                </ul>
+            </div>
+            <div class="concept-card">
+                <h4>Self-consistency</h4>
+                <ul>
+                    <li>Higher compute cost</li>
+                    <li>Explores multiple reasoning paths</li>
+                    <li>Voting can reduce variance</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 id="refinement">Self-Refinement and Confidence</h2>
+        <p>Self-refinement adds an iterative loop: generate a draft, critique it, create a repair plan, and produce a revised answer. This gave me a practical model of how an agent can use the same language model in different roles while preserving explicit state between steps.</p>
+
+        <pre>draft = generate(problem)
+critique = generate(make_critique_prompt(problem, draft))
+revision = generate(make_revision_prompt(problem, draft, critique))
+score = verifier(problem, revision)</pre>
+
+        <p>I also worked through token probabilities and log probabilities. Sequence probability becomes extremely small because it multiplies many token probabilities together. Log probabilities turn multiplication into addition and are therefore more numerically stable and easier to compare.</p>
+
+        <pre>log p(sequence) = Σ log p(token_t | token_&lt;t)</pre>
+
+        <p>One caution is that confidence is not correctness. A model may assign high probability to a familiar but wrong pattern. Confidence signals are useful features, but they should be combined with verifiers, consistency checks, or external tools.</p>
+
+        <h2 id="grpo">Training With RLVR and GRPO</h2>
+        <p>The reinforcement-learning section connected generation to actual parameter updates. In reinforcement learning with verifiable rewards, the model samples several responses to the same prompt, receives an automatically computed reward, and learns to increase the likelihood of stronger responses.</p>
+
+        <div class="pipeline">
+            <div class="pipeline-step"><strong>Prompt</strong><span>sample a problem</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Rollouts</strong><span>generate a response group</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Rewards</strong><span>verify answer and format</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Advantages</strong><span>compare within the group</span></div>
+            <div class="arrow">→</div>
+            <div class="pipeline-step"><strong>Update</strong><span>optimize policy loss</span></div>
+        </div>
+
+        <p>GRPO uses the relative performance of responses sampled for the same prompt. Instead of requiring a separately trained value model, it normalizes rewards within the response group to produce advantages.</p>
+
+        <pre>advantage_i = (reward_i - mean(group_rewards)) 
+              / (std(group_rewards) + epsilon)</pre>
+
+        <p>A response that scores above the group average receives a positive advantage; a below-average response receives a negative one. The policy update then increases the probability of useful trajectories and decreases the probability of weaker ones.</p>
+
+        <h3>Stability mechanisms</h3>
+        <p>I learned that a working RL objective needs guardrails. Clipped policy ratios prevent a single update from changing the policy too aggressively. A KL term discourages the trained policy from drifting too far from a reference model. Format rewards can teach the model to emit structured reasoning tags, but they must not overpower correctness rewards.</p>
+
+        <ul>
+            <li><strong>Policy ratio:</strong> measures how much the probability of a sampled token changed under the new policy.</li>
+            <li><strong>Clipping:</strong> limits the contribution of excessively large probability changes.</li>
+            <li><strong>KL regularization:</strong> penalizes large divergence from a stable reference policy.</li>
+            <li><strong>Entropy tracking:</strong> helps detect whether the model is becoming too deterministic or unstable.</li>
+        </ul>
+
+        <div class="callout">
+            <strong>My biggest RL takeaway:</strong> the algorithm is only one part of the system. Rollout generation, reward quality, batching, logging, checkpointing, and evaluation determine whether training is actually useful.
+        </div>
+
+        <h2 id="distillation">Distilling Reasoning Behavior</h2>
+        <p>Distillation shifts the problem from online reinforcement learning to supervised learning. A stronger teacher generates high-quality reasoning traces, those traces become a training dataset, and a smaller student model learns to imitate the teacher's behavior.</p>
+
+        <p>The workflow helped me understand that dataset construction is the central engineering problem:</p>
+        <ol>
+            <li>Generate several candidate solutions from a teacher.</li>
+            <li>Verify correctness and reject weak or malformed outputs.</li>
+            <li>Format the prompt and response using the student's tokenizer and chat template.</li>
+            <li>Filter examples by sequence length and quality.</li>
+            <li>Train with next-token prediction and monitor validation loss.</li>
+            <li>Evaluate the student using the same verifier-based pipeline.</li>
+        </ol>
+
+        <p>Distillation can make reasoning cheaper at inference time because the student internalizes patterns that previously required a larger model or more expensive search. The tradeoff is that the student may inherit the teacher's mistakes and become specialized to the distribution of generated examples.</p>
+
+        <h2 id="takeaways">What I Can Now Build and Explain</h2>
+        <p>Working through the system end to end changed how I think about reasoning models. I no longer see them as a single architecture feature. I see them as a pipeline that combines model execution, search, verification, optimization, and data engineering.</p>
+
+        <table class="learning-table">
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>What I learned to implement or explain</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Inference</td>
+                    <td>Autoregressive generation, streaming, temperature, top-p sampling, KV caching, and the relationship between hidden states, logits, and tokens.</td>
+                </tr>
+                <tr>
+                    <td>Evaluation</td>
+                    <td>Answer extraction, normalization, mathematical equivalence, verifier design, and regression-style benchmark evaluation.</td>
+                </tr>
+                <tr>
+                    <td>Test-time compute</td>
+                    <td>Chain-of-thought prompting, multiple rollouts, self-consistency, confidence scoring, critique, and revision loops.</td>
+                </tr>
+                <tr>
+                    <td>Post-training</td>
+                    <td>RLVR, group-relative advantages, GRPO policy loss, clipping, KL control, format rewards, and training metrics.</td>
+                </tr>
+                <tr>
+                    <td>Model compression</td>
+                    <td>Teacher-generated reasoning datasets, supervised distillation, filtering, loss computation, and student evaluation.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>The most valuable result was not a single accuracy number. It was developing a first-principles mental model that lets me debug a reasoning system layer by layer: Is generation too deterministic? Is the verifier wrong? Are rewards sparse? Is the policy drifting? Is the dataset teaching the intended behavior? Those questions turn a vague “reasoning model” into an engineering system I can inspect and improve.</p>
+
+        <div class="footer-note">
+            This post summarizes my implementation notes and personal takeaways from studying <em>Build a Reasoning Model (From Scratch)</em> by Sebastian Raschka. The explanations and code snippets here are written in my own words as a record of what I learned.
+        </div>
+    </article>
+</div>
+</body>
+</html>
