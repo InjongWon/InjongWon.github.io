@@ -452,57 +452,121 @@
             </div>
         </section>
 
-        <!-- PROJECTS -->
-        <section id="projects">
-            <h2>Featured Projects</h2>
-            <div class="project-grid">
+       <!-- PROJECTS -->
+       <section id="projects">
+        <h2>Featured Projects</h2>
+        <div class="project-grid">
 
-                <div class="project-card">
-                    <h3>EdgeRAG</h3>
-                    <span class="demo-badge">Interactive Demo Available</span>
-                    <ul>
-                        <li>Edge-optimized RAG system for financial analysis, focusing on retrieval accuracy, latency, and response grounding.</li>
-                        <li>Iterating on chunking heuristics and metadata-aware retrieval for financial text.</li>
-                        <li>Comparing standalone LLM outputs vs retrieval-augmented responses for factual consistency.</li>
-                        <li>Exploring memory usage, model size trade-offs, and inference performance at the edge.</li>
-                        <li>Investigating real-time data integration, hybrid dense–sparse retrieval, and prompt orchestration.</li>
-                    </ul>
-                    <div class="tag-row">
-                        <span class="tag">Python</span>
-                        <span class="tag">Vector DB</span>
-                        <span class="tag">RAG</span>
-                        <span class="tag">FastAPI</span>
-                        <span class="tag">React</span>
-                    </div>
-                    <div class="project-btns">
-                        <a href="https://injongwon.github.io/EdgeRAG/" target="_blank" class="btn btn-primary">Try Demo</a>
-                        <a href="https://github.com/InjongWon/EdgeRAG" target="_blank" class="btn btn-secondary">GitHub</a>
-                    </div>
+            <!-- Adaptive LLM Inference Engine -->
+            <div class="project-card">
+                <h3>Adaptive LLM Inference Engine</h3>
+                <span class="stat-badge">600+ tok/s · P99 &lt;3s · 32 concurrent</span>
+                <ul>
+                    <li>Production-style OpenAI-compatible inference gateway built on vLLM with continuous batching and PagedAttention KV-cache management.</li>
+                    <li>Multi-GPU tensor-parallel inference with NCCL; benchmarked INT4 quantization and speculative decoding under production workloads.</li>
+                    <li>Prometheus + Grafana dashboards tracking TTFT, KV-cache pressure, GPU utilization, and P95/P99 latency in real time.</li>
+                    <li>Reduced inter-token latency by 22% and model-weight memory by 65% through systematic profiling and optimization.</li>
+                </ul>
+                <div class="tag-row">
+                    <span class="tag">vLLM</span>
+                    <span class="tag">CUDA</span>
+                    <span class="tag">Python</span>
+                    <span class="tag">Prometheus</span>
+                    <span class="tag">Docker</span>
                 </div>
-
-                <div class="project-card">
-                    <h3>Performance Bid-Ask Order Book</h3>
-                    <span class="demo-badge">Interactive Demo Available</span>
-                    <ul>
-                        <li>Sub-500ns price-time priority matching engine in C++17 with lock-free order ingestion and cache-line aligned structs.</li>
-                        <li>Profiled via Google Benchmark and perf to eliminate L1 cache bottlenecks on the critical match path.</li>
-                        <li>Dynamic order book with fixed-size array + linked list for efficient maintenance and retrieval.</li>
-                    </ul>
-                    <div class="tag-row">
-                        <span class="tag">C++</span>
-                        <span class="tag">Prop Trading</span>
-                        <span class="tag">L2 Order Book</span>
-                        <span class="tag">WebSockets</span>
-                        <span class="tag">Market Signals</span>
-                    </div>
-                    <div class="project-btns">
-                        <a href="https://injongwon.github.io/LobEngine/" target="_blank" class="btn btn-primary">Try Demo</a>
-                        <a href="https://github.com/InjongWon/LobEngine" target="_blank" class="btn btn-secondary">GitHub</a>
-                    </div>
+                <div class="project-btns">
+                    <a href="https://github.com/InjongWon/Adaptive_Inference_Engine" target="_blank" class="btn btn-primary">GitHub</a>
                 </div>
-
             </div>
-        </section>
+
+            <!-- Needle DL Engine -->
+            <div class="project-card">
+                <h3>Needle DL Engine</h3>
+                <span class="stat-badge">From-scratch · C++ CPU + CUDA GPU</span>
+                <ul>
+                    <li>Deep learning framework built from scratch — reverse-mode automatic differentiation engine, computational graph, and N-dimensional array runtime.</li>
+                    <li>Custom C++ CPU backend and CUDA GPU backend with tiled matrix-multiplication kernels and memory-efficient tensor operations.</li>
+                    <li>Trained CNN, RNN, LSTM, and Transformer (multi-head attention, prenorm residual) models end-to-end on MNIST, CIFAR-10, and Penn Treebank.</li>
+                </ul>
+                <div class="tag-row">
+                    <span class="tag">C++</span>
+                    <span class="tag">CUDA</span>
+                    <span class="tag">Python</span>
+                    <span class="tag">PyTorch</span>
+                </div>
+                <div class="project-btns">
+                    <a href="https://github.com/InjongWon/minigrad-dl" target="_blank" class="btn btn-primary">GitHub</a>
+                </div>
+            </div>
+
+            <!-- MiniLLM / Pretraining -->
+            <div class="project-card">
+                <h3>MiniLLM — Pretraining & Kernel Work</h3>
+                <span class="stat-badge">Flash Attention 2 · DDP · FSDP</span>
+                <ul>
+                    <li>Implemented Flash Attention 2 kernel in Triton with activation checkpointing to reduce memory I/O under large-context workloads.</li>
+                    <li>Distributed training with NCCL-backed Distributed Data Parallel (DDP) and Fully Sharded Data Parallel (FSDP) across multi-GPU systems.</li>
+                    <li>Built GPU profiling and benchmarking harness measuring kernel throughput, GPU utilization, and memory bandwidth.</li>
+                    <li>Ran scaling-law experiments to characterize compute-optimal model sizing.</li>
+                </ul>
+                <div class="tag-row">
+                    <span class="tag">PyTorch</span>
+                    <span class="tag">Triton</span>
+                    <span class="tag">CUDA</span>
+                    <span class="tag">NCCL</span>
+                    <span class="tag">Python</span>
+                </div>
+                <div class="project-btns">
+                    <a href="https://github.com/InjongWon/pretrainingmodel" target="_blank" class="btn btn-primary">GitHub</a>
+                </div>
+            </div>
+
+            <!-- EdgeRAG -->
+            <div class="project-card">
+                <h3>EdgeRAG</h3>
+                <span class="demo-badge">Interactive Demo Available</span>
+                <ul>
+                    <li>Edge-optimized RAG system for financial analysis, focusing on retrieval accuracy, latency, and response grounding.</li>
+                    <li>Iterating on chunking heuristics and metadata-aware retrieval for financial text.</li>
+                    <li>Comparing standalone LLM outputs vs retrieval-augmented responses for factual consistency.</li>
+                    <li>Exploring memory usage, model size trade-offs, and inference performance at the edge.</li>
+                </ul>
+                <div class="tag-row">
+                    <span class="tag">Python</span>
+                    <span class="tag">Vector DB</span>
+                    <span class="tag">RAG</span>
+                    <span class="tag">FastAPI</span>
+                    <span class="tag">React</span>
+                </div>
+                <div class="project-btns">
+                    <a href="https://injongwon.github.io/EdgeRAG/" target="_blank" class="btn btn-primary">Try Demo</a>
+                    <a href="https://github.com/InjongWon/EdgeRAG" target="_blank" class="btn btn-secondary">GitHub</a>
+                </div>
+            </div>
+
+            <!-- Order Book -->
+            <div class="project-card">
+                <h3>Performance Bid-Ask Order Book</h3>
+                <span class="demo-badge">Interactive Demo Available</span>
+                <ul>
+                    <li>Sub-500ns price-time priority matching engine in C++17 with lock-free order ingestion and cache-line aligned structs.</li>
+                    <li>Profiled via Google Benchmark and perf to eliminate L1 cache bottlenecks on the critical match path.</li>
+                    <li>Dynamic order book with fixed-size array + linked list for efficient maintenance and retrieval.</li>
+                </ul>
+                <div class="tag-row">
+                    <span class="tag">C++</span>
+                    <span class="tag">Prop Trading</span>
+                    <span class="tag">L2 Order Book</span>
+                    <span class="tag">WebSockets</span>
+                </div>
+                <div class="project-btns">
+                    <a href="https://injongwon.github.io/LobEngine/" target="_blank" class="btn btn-primary">Try Demo</a>
+                    <a href="https://github.com/InjongWon/LobEngine" target="_blank" class="btn btn-secondary">GitHub</a>
+                </div>
+            </div>
+
+        </div>
+    </section>
 
         <!-- EXPERIENCE -->
         <section id="experience">
@@ -594,7 +658,7 @@
 
     <footer>
         <p>© 2025 Injong Won. All rights reserved.</p>
-    </footer>
+    </footer> 
 
 </body>
 </html>
